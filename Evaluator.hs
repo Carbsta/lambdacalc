@@ -1,66 +1,42 @@
 module Evaluator where
 
-import AST
-import Data.List
-import Parser
+import           AST
+import           Data.Either
+import           Data.List
+import           Parser
 
+-- Free Variables:
 -- A variable x is bound to an abstraction when it occurs in the
 -- body t of an abstraction \x.t
 -- x is free if it appears in a position where it is not bound
 -- by an enclosing abstraction on x.
-data BoundLTerm = BVal (Maybe Int, LVar)
-                | BAbs (LVar, Int) BoundLTerm
-                | BApp BoundLTerm BoundLTerm
-                  deriving Show
+-- FV() in TAPL 5.3.2
+fv :: LTerm -> [Name]
+fv (LVar x)     = [x]
+fv (LAbs x t)   = fv(t) \\ [x]
+fv (LApp t1 t2) = fv(t1) ++ fv(t2)
+
+-- Capture Avoiding Subsitution:
+-- [x => s]x       = s
+-- [x => s]y       = y                      if y /= x
+-- [x => s](\y.t1) = \y.[x -> s]t1          if y /= x and y /<- FV(s)
+-- [x => s](t1 t2) = [x => s]t1 [x => s]t2
+-- Note, partial, requires alpha conversion.
+-- subst x t1 t2 == [x => t1]t2
+subst :: Name -> LTerm -> LTerm -> LTerm
+subst x t1 t2@(LVar v) | x == v     = t1
+                       | otherwise  = t2
+subst x t1 (LAbs v t) | v /= x && notElem v (fv t1) = LAbs v (subst x t1 t)
+                      | otherwise                   = error $ "Cannot substitute '" ++ show x ++ "' with '" ++ show t1 ++ "' in term '" ++ show (LAbs v t) ++ "'"
+subst x t1 (LApp t1' t2') = LApp (subst x t1 t1') (subst x t1 t2')
 
 
-bind :: LTerm -> Int -> Bindings -> BoundLTerm
-bind (L v) i b = case i `lookup` b of
-        Nothing -> BVal (Nothing, v)
-        Just v' -> case v == v' of
-                True -> BVal ()
-
--- eval :: Env -> LTerm -> Value
--- eval env term = case term of
---         L v      -> Var v
---         LAbs v a -> Closure a env
---         LApp a b ->
---             let Closure c env' = eval env a in
---             let v = eval env b in
---             eval (v : env') c
-
--- data Value = Var LVar
---            | Closure ScopedLTerm
---            deriving (Show, Eq)
---
--- scoper :: LTerm -> Int -> Env -> ScopedLTerm
--- scoper (L v) s e = case (Var v) `elemIndex` e of
---         Nothing -> ((SVal s), e++[Var v])
---         Just i  -> ((SVal i), e)
--- scoper (LAbs v l) s e = case (Var v) `elemIndex` e of
---         Nothing -> ((SAbs s l'), e'')
---         Just i  -> ((SAbs i l'), e')
---                    where (l',e') = scoper l
+-- Evaluation (TAPL 5.3.2):
+--   t1 -> t1' / t1 t2 -> t1' t2 (E-App1)
+--   t2 -> t2' / v1 t2 -> v1 t2' (E-App2)
+-- (\x.t12) v2 / [x => v2]t12    (E-AppAbs)
 
 
 
--- \t. \f. t;
-tru :: LTerm
-tru = LAbs 't' (LAbs 'f' (L 't'))
-
--- \t. \f. f;
-fls :: LTerm
-fls = LAbs 't' (LAbs 'f' (L 'f'))
-
--- \b. \t. \f. b t f
-lif :: LTerm
-lif = LAbs 'b' (LAbs 't' (LAbs 'f' (LApp (LApp (L 'b') (L 't')) (L 'f'))))
-
-lid :: LTerm
-lid = LAbs 'x' (L 'x')
-
-test :: LTerm
-test = LApp (lid) (LApp (lid) (LAbs 'z' (LApp (lid) (L 'z'))))
-
-testif :: LTerm
-testif = LApp (LApp (LApp lif tru) (L 'y')) (L 'x')
+tester :: String -> LTerm
+tester s = fromRight (LVar "parseError") (parseTerm s)
