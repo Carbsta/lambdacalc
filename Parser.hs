@@ -24,10 +24,10 @@ lvar = do {v <- identifier; return (LVar v)}
 
 labs :: Parser LTerm
 labs = do reservedOp "\\"
-          v <- identifier
+          vs <- many1 identifier
           reservedOp "."
           t  <- lapp
-          return (LAbs v t)
+          return (foldr LAbs t vs)
 
 -- lexer
 
