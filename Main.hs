@@ -1,8 +1,10 @@
 module Main where
 
-import AST
-import Parser
-import Text.Parsec
+import           AST
+import           ChurchEncodings
+import           Evaluator
+import           Parser
+import           Text.Parsec
 
 main :: IO ()
 main = putStrLn "Hello, Haskell!"

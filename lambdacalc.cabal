@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                lambdacalc
-version:             0.1.0.0
+version:             0.0.0.1
 -- synopsis:
 -- description:
 -- license:
@@ -17,8 +17,8 @@ cabal-version:       >=1.10
 
 executable lambdacalc
   main-is:             Main.hs
-  other-modules:       Parser
+  other-modules:       Parser, AST, Evaluator, ChurchEncodings
   -- other-extensions:
-  build-depends:       parsec, base (>=4.11 && <4.12)
+  build-depends:       parsec, base >=4.11 && <4.12
   -- hs-source-dirs:
   default-language:    Haskell2010
