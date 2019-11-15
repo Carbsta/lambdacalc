@@ -39,3 +39,17 @@ subst x t1 (LApp t1' t2') = LApp (subst x t1 t1') (subst x t1 t2')
 --   t1 -> t1' / t1 t2 -> t1' t2 (E-App1)
 --   t2 -> t2' / v1 t2 -> v1 t2' (E-App2)
 -- (\x.t12) v2 / [x => v2]t12    (E-AppAbs)
+evalStep :: LTerm -> Either LTerm LTerm
+evalStep (LApp (LAbs x t) v2@(LAbs _ _)) = Right $ subst x v2 t
+evalStep (LApp v1@(LAbs _ _) t2)         = case (evalStep t2) of
+                                              Right t2' -> Right $ LApp v1 t2'
+                                              Left  t2' -> Left t2'
+evalStep (LApp t1 t2)                    = case (evalStep t1) of
+                                              Right t1' -> Right $ LApp t1' t2
+                                              Left  t1' -> Left t1'
+evalStep x                               = Left x
+
+eval :: LTerm -> LTerm
+eval t = case (evalStep t) of
+            Left  x -> x
+            Right x -> eval x
