@@ -53,7 +53,7 @@ instance MonadPlus Parser where
 instance Alternative Parser where
         empty   = Parser (\cs -> [])
         p <|> q = Parser (\cs -> parse p cs <|> parse q cs)
-        some p = do {a <- p; as <- some p; return (a:as)}
+        some p = do {a <- p; as <- many p; return (a:as)}
         many p  = some p +++ return []
 
 -- (mplus) is an operator for non-deterministic choice
