@@ -17,22 +17,32 @@ fv (LAbs x t)   = fv(t) \\ [x]
 fv (LApp t1 t2) = fv(t1) ++ fv(t2)
 
 -- Capture Avoiding Subsitution:
+-- Notation [x => e2]e1 substitution of all free occurences of an identifier
+-- x with an expression e2 in an expression e1.
 -- [x => s]x       = s
 -- [x => s]y       = y                      if y /= x
--- [x => s](\y.t1) = \y.[x => s]t1          if y /= x and y /<- FV(s)
 -- [x => s](t1 t2) = [x => s]t1 [x => s]t2
--- Note, partial, requires alpha conversion.
+-- [x => s](\y.t1) = \y.t1                  if x == y
+-- [x => s](\y.t1) = \y.[x => s]t1          if y /= x and y /<- FV(s)
+-- [x => s](\y.t1) = \z.[x => s]([y => z]t1)    otherwise
+-- where z /= x, z /= y and z /<- FV(s) U FV(t1)
+-- Hudak 1.1.1
+
 -- subst x t1 t2 == [x => t1]t2
 subst :: Name -> LTerm -> LTerm -> LTerm
 subst x t1 t2@(LVar v) | x == v     = t1
                        | otherwise  = t2
+subst x t1 (LApp t1' t2') = LApp (subst x t1 t1') (subst x t1 t2')
 subst x t1 t2@(LAbs v t) | v == x = t2
                          | notElem v (fv t1) = LAbs v (subst x t1 t)
-                         | otherwise = subst x t1 (LAbs v' t')
+                         | otherwise = subst x t1 t'
                                        where
-                                               v' = v++"'"
+                                               v' = fresh $ (fv t1) ++ (fv t)
                                                t' = subst v (LVar v') t
-subst x t1 (LApp t1' t2') = LApp (subst x t1 t1') (subst x t1 t2')
+
+-- pretty lazy way to generate fresh names.
+fresh :: [Name] -> Name
+fresh ns = (maximum ns)++"'"
 
 
 -- Evaluation (TAPL 5.3.2):

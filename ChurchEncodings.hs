@@ -28,6 +28,9 @@ cpairtest = cfst++"("++cpair++"vw)"
 scctest = cscc++czero
 addtest = cplus++czero++cone
 
+fixpoint = "(\\f. ((\\x.(f (x x))) (\\x.(f (x x))))) (\\x.x)"
+
+
 -- Term Constructor
 tc :: String -> LTerm
 tc s = fromRight (LVar "parseError") (parseTerm s)
