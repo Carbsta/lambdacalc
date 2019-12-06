@@ -37,7 +37,7 @@ subst x t1 t2@(LAbs v t) | v == x = t2
                          | notElem v (fv t1) = LAbs v (subst x t1 t)
                          | otherwise = LAbs v' (subst x t1 t')
                                        where
-                                               v' = fresh $ (fv t1) ++ (fv t)
+                                               v' = fresh $ (fv t1) ++ (fv t) ++ [x,v]
                                                t' = subst v (LVar v') t
 
 -- pretty lazy way to generate fresh names.

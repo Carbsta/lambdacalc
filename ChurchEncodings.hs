@@ -25,10 +25,8 @@ ctimes = "(\\mn.m("++cplus++"n)"++czero++")"
 omega = "(\\x.xx)(\\y.yy)"
 
 cpairtest = cfst++"("++cpair++"vw)"
-scctest = cscc++czero
-addtest = cplus++czero++cone
 
-fixpoint = "(\\f. ((\\x.(f (x x))) (\\x.(f (x x))))) (\\x.x)"
+fixpoint = "(\\f.((\\x.(f(x x)))(\\x.(f(x x)))))(\\x.x)"
 
 
 -- Term Constructor
