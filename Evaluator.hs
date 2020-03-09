@@ -1,7 +1,6 @@
 module Evaluator where
 
 import           AST
-import           ChurchEncodings
 import           Data.List
 import           Parser
 

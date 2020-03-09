@@ -1,0 +1,19 @@
+-- Standard Library of Lambda Calculus Definitions --
+fixpoint = \f.((\x.(f(x x)))(\x.(f(x x))))(\x.x)|
+pairtest = \v.\w.fst (pair v w)|
+omega = (\x.x x)(\y.y y)|
+times = \m.\n.m(plus n) zero|
+plus = \m.\n.\s.\z.m s(n s z)|
+scc = \n.\s.\z.s(n s z)|
+four = \s.\z.s(s(s(s z)))|
+three = \s.\z.s(s(s z))|
+two = \s.\z.s(s z)|
+one = \s.\z.s z|
+zero = \s.\z.z|
+snd = \p.p false|
+fst = \p.p true|
+pair = \f.\s.\b.b f s|
+if = \b.\t.\f.b t f|
+false = \t.\f.f|
+true = \t.\f.t|
+id = \x.x|
