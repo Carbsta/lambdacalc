@@ -38,7 +38,7 @@ setup window = do
    toolbar <- mkToolbar
    canvas <- mkCanvas canWidth canHeight # set UI.droppable True
    --UI.fillRect (50.0,50.0) 50.0 50.0 canvas
-   drawTerm canvas (l2g (50.0,400.0) (fromJust $ lookup "four" stdlib))
+   drawTerm canvas (l2g (50.0,400.0) (fromJust $ lookup "fixpoint" stdlib))
    UI.addStyleSheet window "style.css"
    UI.addStyleSheet window "widgets.css"
    -- b <- UI.div #. "drag-me" #  set text "Drag me around!" # set UI.draggable True # set UI.dragData "dragging"

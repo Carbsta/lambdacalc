@@ -1,5 +1,5 @@
 -- Standard Library of Lambda Calculus Definitions --
-fixpoint = \f.((\x.(f(x x)))(\x.(f(x x))))(\x.x)|
+fixpoint = \f.(\x.f (x x))(\x.f(x x))|
 pairtest = \v.\w.fst (pair v w)|
 omega = (\x.x x)(\y.y y)|
 times = \m.\n.m(plus n) zero|

@@ -14,7 +14,7 @@ data VTerm = Wire [Point]
 l2g :: Point -> LTerm -> VTerm
 l2g p@(x,y) (LVar _) = Wire (p:(x+50,y):[])
 l2g p@(x,y) (LAbs _ l) = Clip (p:(x+50,y):[]) DirRight (Just (l2g (x+50,y) l))
-l2g p@(x,y) (LApp l m) = Box p (Just (l2g (x+10, y-30) l)) (Just (l2g (x+30, y) m))
+l2g p@(x,y) (LApp l m) = Box p (Just (l2g (x+20, y-30) l)) (Just (l2g (x+40, y) m))
 
 drawWire :: Canvas -> [Point] -> UI ()
 drawWire c (p:ps) = do
@@ -53,8 +53,12 @@ drawTerm c (Wire ps) = do
     drawClip c (last ps) DirRight
 drawTerm c (Clip ps d l) = do
     drawWire c ps
+    -- drawClip c (last ps) d
     mapM_ (\v -> drawTerm c v) l
-drawTerm c (Box p l m) = do
-    drawBox c p
+drawTerm c (Box p@(x,y) l m) = do
+    drawWire c [(x,y),(x+10, y)]
+    drawBox c (x+10,y)
+    drawWire c  [(x+20,y),(x+20, y-30)]
+    drawWire c  [(x+20,y),(x+40, y)]
     mapM_ (\v -> drawTerm c v) l
     mapM_ (\v -> drawTerm c v) m
