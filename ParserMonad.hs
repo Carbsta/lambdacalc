@@ -87,6 +87,10 @@ sat p = do {c <- item; if p c then return c else mzero}
 char :: Char -> Parser Char
 char c = sat (c ==)
 
+-- parser for letters
+letter :: Parser Char
+letter = sat isAlpha
+
 -- Parse a specific string
 string :: String -> Parser String
 string ""     = return ""
@@ -96,10 +100,10 @@ string (c:cs) = do {char c; string cs; return (c:cs)}
 -- zero or more applications:
 -- many :: Parser a -> Parser [a]
 -- many p = many1 p +++ return []
-
--- one or more:
--- many1 :: Parser a -> Parser [a]
--- many1 p = do {a <- p; as <- many p; return (a:as)}
+--
+-- -- one or more:
+many1 :: Parser a -> Parser [a]
+many1 p = do {a <- p; as <- many p; return (a:as)}
 
 -- parse repeated applications of a parser p,
 -- seperated by applications of a parser sep,
