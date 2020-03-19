@@ -3,6 +3,27 @@ module Parser where
 import           AST
 import           Data.Char
 import           ParserMonad
+import Control.Applicative
+
+
+parseFile :: FilePath -> IO [(String,LTerm)]
+parseFile fp = fst <$> head <$>
+                apply (comments *> parseLine `sepby` eol <* eol) <$> readFile fp
+
+comments :: Parser ()
+comments = do symb "--"
+              many (sat (/= '-'))
+              symb "--"
+              return ()
+
+parseLine :: Parser (String,LTerm)
+parseLine = do name <- ltoken $ many1 letter
+               lsymb "="
+               term <- lterm
+               return (name, term)
+
+eol :: Parser Char
+eol = char '\n' +++ char '\r'
 
 parseTerm :: String -> [(LTerm,String)]
 parseTerm s = apply lterm s
@@ -11,9 +32,9 @@ lterm :: Parser LTerm
 lterm = labs +++ lapp +++ unit
 
 labs :: Parser LTerm
-labs = do symb "λ"
-          v <- token letter
-          symb "."
+labs = do lsymb "λ"
+          v <- ltoken letter
+          lsymb "."
           t <- lterm
           return (LAbs [v] t)
 
@@ -24,14 +45,14 @@ unit :: Parser LTerm
 unit = lvar +++ paren +++ definition
 
 lvar :: Parser LTerm
-lvar = do {v <- token letter; return (LVar [v])}
+lvar = do {v <- ltoken letter; return (LVar [v])}
 
 paren :: Parser LTerm
-paren = do {token $ char '('; term <- lterm; token $ char ')'; return term}
+paren = do {lsymb "("; term <- lterm; lsymb ")"; return term}
 
 definition :: Parser LTerm
 definition = do char '$'
-                name <- token $ many1 letter
+                name <- ltoken $ many1 letter
                 return $ fst $ head $ parseTerm $ case name of
                     "fix" -> "λf.(λx.f (x x))(λx.f(x x))"
                     "omega" -> "(λx.x x)(λy.y y)"

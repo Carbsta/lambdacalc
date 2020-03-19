@@ -148,3 +148,15 @@ symb cs = token (string cs)
 -- Apply a parser p, throwing away any leading space:
 apply :: Parser a -> String -> [(a,String)]
 apply p = parse (do {space; p})
+
+-- For multiline documents where preserving new lines is important:
+
+-- parsing spaces, but not newlines
+lspace :: Parser String
+lspace = many $ sat (\c -> all ($ c) [isSpace, (/= '\n'), (/= '\r')])
+
+ltoken :: Parser a -> Parser a
+ltoken p = do {a <-p; lspace; return a}
+
+lsymb :: String -> Parser String
+lsymb cs = ltoken (string cs)
