@@ -5,12 +5,13 @@ import Lambda
 import Data.List
 import Parser
 
+import Data.List.Split (chunksOf)
 import Data.Maybe (fromJust)
 
-stdlib = link <$> parseFileName parseFile "StandardLibrary.lam"     
-plus = fromJust <$> (lookup "plus") <$> stdlib
-
 type NamingContext = [String]
+
+stdnc :: NamingContext
+stdnc = chunksOf 1 ['a'..]
 
 removeNames :: NamingContext -> LTerm -> Lambda
 removeNames g (LVar x) = Var $ toIndex $ head (elemIndices x g)
