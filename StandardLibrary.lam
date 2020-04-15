@@ -1,6 +1,6 @@
 -- Standard Library of Lambda Calculus Definitions --
 fix = λf.(λx.f (x x))(λx.f(x x))
-pairtest = λv.λw.fst ($pair v w)
+pairtest = λv.λw.$fst ($pair v w)
 omega = (λx.x x)(λy.y y)
 times = λm.λn.m($plus n) $zero
 plus = λm.λn.λs.λz.m s(n s z)

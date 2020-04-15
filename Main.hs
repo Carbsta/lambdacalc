@@ -4,7 +4,6 @@ import           AST
 import           VisualLambda
 import           Evaluator
 import           Parser
-import           Text.Parsec
 import qualified Graphics.UI.Threepenny            as UI
 import           Graphics.UI.Threepenny.Core
 import           Data.Maybe

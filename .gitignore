@@ -2,6 +2,7 @@
 *.o
 *.so
 cabal.sandbox.config
+*.secret
 .cabal-sandbox
 dist/
 *.hi

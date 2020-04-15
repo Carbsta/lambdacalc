@@ -32,11 +32,14 @@ lterm :: Parser LTerm
 lterm = labs +++ lapp +++ unit
 
 labs :: Parser LTerm
-labs = do lsymb "λ"
+labs = do absOp
           v <- ltoken letter
           lsymb "."
           t <- lterm
           return (LAbs [v] t)
+
+absOp :: Parser String
+absOp = lsymb "λ" +++ symb "\\"
 
 lapp :: Parser LTerm
 lapp = do {ts <- many1 unit; return (foldl1 LApp ts)}
