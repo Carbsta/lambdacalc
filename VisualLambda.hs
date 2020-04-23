@@ -1,8 +1,8 @@
 module VisualLambda where
 
-import Graphics.UI.Threepenny.Canvas
-import qualified Graphics.UI.Threepenny            as UI
-import           Graphics.UI.Threepenny.Core
+-- import Graphics.UI.Threepenny.Canvas
+-- import qualified Graphics.UI.Threepenny            as UI
+-- import           Graphics.UI.Threepenny.Core
 import Lambda
 import Parser
 import Conversion

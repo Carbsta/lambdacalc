@@ -19,7 +19,7 @@ executable lambdacalc
   main-is:             Main.hs
   other-modules:       Parser, AST, Evaluator, Conversion, Lambda, ParserMonad, VisualLambda, Bot
   -- other-extensions:
-  build-depends:       parsec, base >=4.11 && <4.12, text, split, discord-haskell, threepenny-gui
+  build-depends:       base, text, split, discord-haskell, containers
   ghc-options:         -threaded
   -- hs-source-dirs:
   default-language:    Haskell2010
