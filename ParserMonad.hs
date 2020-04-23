@@ -91,6 +91,10 @@ char c = sat (c ==)
 letter :: Parser Char
 letter = sat isAlpha
 
+-- parser for digits
+digit :: Parser Char
+digit = sat isDigit
+
 -- Parse a specific string
 string :: String -> Parser String
 string ""     = return ""

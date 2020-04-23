@@ -74,3 +74,10 @@ eval (App (Abs l) v@(Abs _)) = shift (-1) (subst 0 (shift 1 v 0) l) 0
 eval (App v@(Abs _) t) = App v (eval t)
 eval (App l r) = App (eval l) r
 eval x = x
+
+steppedEval :: Int -> Lambda -> Lambda
+steppedEval 0 x = x
+steppedEval _ (App (Abs l) v@(Abs _)) = shift (-1) (subst 0 (shift 1 v 0) l) 0
+steppedEval n (App v@(Abs _) t) = App v (steppedEval (n-1) t)
+steppedEval n (App l r) = App (steppedEval (n-1) l) r
+steppedEval _ x = x

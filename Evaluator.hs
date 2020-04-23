@@ -44,7 +44,7 @@ fresh :: [Name] -> Name
 fresh ns = (maximum ns)++"'"
 
 
--- Evaluation (TAPL 5.3.2):
+-- Call by Value Evaluation (TAPL 5.3.2):
 --   t1 -> t1' / t1 t2 -> t1' t2 (E-App1)
 --   t2 -> t2' / v1 t2 -> v1 t2' (E-App2)
 -- (\x.t12) v2 / [x => v2]t12    (E-AppAbs)
@@ -62,3 +62,8 @@ eval :: LTerm -> LTerm
 eval t = case evalStep t of
             Left  x -> x
             Right x -> eval x
+
+
+lazyEval :: LTerm -> LTerm
+lazyEval (LApp (LAbs x t1) t2) = subst x t2 t1
+lazyEval (LApp t1 t2) = LApp (lazyEval t1) t2
