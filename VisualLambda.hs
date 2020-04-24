@@ -1,97 +1,73 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE TypeFamilies              #-}
+
 module VisualLambda where
 
--- import Graphics.UI.Threepenny.Canvas
--- import qualified Graphics.UI.Threepenny            as UI
--- import           Graphics.UI.Threepenny.Core
-import Lambda
+import qualified Lambda as L
+import Diagrams.Prelude
+import Diagrams.Backend.Rasterific
 import Parser
 import Conversion
 
-data Component = Clip | Segment Wire | Box
-
-data Wire = Horizontal | Vertical | UpBend | Downbend
-
-data VisualTree = TVar Index
-                | Free
-                | TApp VisualTree [Index] VisualTree [Index]
-                deriving Show
-
--- data Intermediate = IVar Index
---                   | IAbs Index Intermediate
---                   | IApp Intermediate Intermediate
-
--- toAppTree :: Lambda -> ScopeLevel -> AppTree
--- toAppTree (Var n) w | toInt n >= w = Free
---                     | otherwise   = TVar n
--- toAppTree (Abs l) w = toAppTree l w
--- toAppTree (App l r) w = TApp (toAppTree l w) (toAppTree r w)
-
-toVisTree :: Lambda -> ScopeLevel -> VisualTree
-toVisTree (Var n) w | toInt n >= w = Free
-                    | otherwise = TVar n
-toVisTree (Abs l) w = toVisTree l w
-toVisTree (App l r) w = TApp (toVisTree l w) [] (toVisTree r w) []
-
-hspace :: Num a => Lambda -> ScopeLevel -> a
-hspace (Var n) s | toInt n > s = 0
-                 | otherwise = 1
-hspace (Abs l) s = 1 + hspace l s
-hspace (App l r) s = hspace l s + hspace r s
-
--- data VTerm = Wire Index [Point]
---             | Clip [Point] (Maybe VTerm)
---             | Box Point (Maybe VTerm) (Maybe VTerm)
-
-
-
--- l2g :: Point -> Lambda -> VTerm
--- l2g p@(x,y) (Var i) = Wire i (p:(x+50,y):[])
--- l2g p@(x,y) (Abs l) = Clip (p:(x+50,y):[]) (Just (l2g (x+50,y) l))
--- l2g p@(x,y) (App l m) = Box p (Just (l2g (x+20, y-30) l)) (Just (l2g (x+40, y) m))
-
--- drawWire :: Canvas -> [Point] -> UI ()
--- drawWire c (p:ps) = do
---     beginPath c
---     moveTo p c
---     mapM_ (\x -> UI.lineTo x c) ps
---     stroke c
+-- toDouble :: L.Index -> Double
+-- toDouble = fromIntegral . L.toInt
 --
--- drawClip :: Canvas -> Point -> Direction -> UI()
--- drawClip c p@(x,y) DirRight = do
---     beginPath c
---     moveTo (x+10, y-10) c
---     lineTo p c
---     lineTo (x+10, y+10) c
---     stroke c
--- drawClip c p@(x,y) DirDown = do
---     beginPath c
---     moveTo (x+10, y-10) c
---     lineTo p c
---     lineTo (x-10, y-10) c
---     stroke c
+-- draw :: L.Lambda -> Diagram B
+-- draw t = fig where (fig, _, _) = figure t
 --
--- drawBox :: Canvas -> Point -> UI()
--- drawBox c p@(x,y) = do
---     beginPath c
---     moveTo (x,y-10) c
---     lineTo (x,y+10) c
---     lineTo (x+20,y+10) c
---     lineTo (x+20,y-10) c
---     closePath c
---     stroke c
---
--- drawTerm :: Canvas -> VTerm -> UI()
--- drawTerm c (Wire ps) = do
---     drawWire c ps
---     drawClip c (last ps) DirRight
--- drawTerm c (Clip ps d l) = do
---     drawWire c ps
---     -- drawClip c (last ps) d
---     mapM_ (\v -> drawTerm c v) l
--- drawTerm c (Box p@(x,y) l m) = do
---     drawWire c [(x,y),(x+10, y)]
---     drawBox c (x+10,y)
---     drawWire c  [(x+20,y),(x+20, y-30)]
---     drawWire c  [(x+20,y),(x+40, y)]
---     mapM_ (\v -> drawTerm c v) l
---     mapM_ (\v -> drawTerm c v) m
+-- -- helper function for drawing the diagram returns the figure and width and height
+-- figure :: L.Lambda -> (Diagram B, Int, Int)
+-- figure (L.Var x) = (fig, 1, 0)
+--     where fig = (phantom (hrule 2 :: Diagram B)) <> vrule (1 + toDouble x) # alignB
+-- figure (L.Abs t) = ((binder <> fig), w, h+1)
+--     where (fig, w, h) = figure t
+--           binder = hrule (fromIntegral (2 * w) - 0.5) # alignL #translateX (-0.75)
+-- figure (L.App t1 t2) =
+--     (((fig1 <> tail1) ||| (fig2 <> tail2)) <> bar, w1 + w2, h1 + delta1 + 1)
+--    where
+--     (fig1, w1, h1) = figure t1
+--     (fig2, w2, h2) = figure t2
+--     delta1         = max 0 (h2 - h1)
+--     delta2         = max 0 (h1 - h2)
+--     tail1          = vrule (fromIntegral $ delta1 + 1) # alignT # translateY (fromIntegral (-h1))
+--     tail2          = vrule (fromIntegral delta2) # alignT # translateY (fromIntegral (-h2))
+--     bar =
+--       hrule (fromIntegral $ (2 * w1)) # alignL # translateY (fromIntegral (-h1 - delta1)) # lineCap LineCapSquare
+
+double :: Int -> Double
+double = fromIntegral
+
+vbar :: Int -> Diagram B
+vbar n = vrule (double n) # alignT
+
+hbar :: Int -> Diagram B
+hbar n = hrule (double n) # alignL
+
+draw :: L.Lambda -> Diagram B
+draw t = let (fig, _, _) = draw' t in fig # lwL 0.5 # frame 1
+ where
+  draw' :: L.Lambda -> (Diagram B, Int, Int)
+  draw' (L.Abs t) = (binder <> (fig # translateY (-1)), h + 1, w)
+   where
+    (fig, h, w) = draw' t
+    binder      = hrule (double (2 * w) - 0.5) # alignL # translateX (-0.75)
+  draw' (L.Var i) = (fig, 0, 1)
+   where
+    fig = (phantom (hrule 2 :: Diagram B) <> vrule (double $ (L.toInt i) + 1)) # alignB
+  draw' (L.App t1 t2) =
+    (((fig1 <> tail1) ||| (fig2 <> tail2)) <> bar, h1 + delta1 + 1, w1 + w2)
+   where
+    (fig1, h1, w1) = draw' t1
+    (fig2, h2, w2) = draw' t2
+    delta1         = max 0 (h2 - h1)
+    delta2         = max 0 (h1 - h2)
+    tail1          = vbar (delta1 + 1) # translateY (double (-h1))
+    tail2          = vbar delta2 # translateY (double (-h2))
+    bar =
+      hbar (2 * w1) # translateY (double (-h1 - delta1)) # lineCap LineCapSquare
+
+-- test :: L.Lambda
+-- test = removeNames stdnc $ fst $ head $ parseTerm "($eq 1) 1"
+
+-- main = renderRasterific "test.png" (dims2D 1600 900) (draw test)

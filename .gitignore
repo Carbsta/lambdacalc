@@ -1,6 +1,8 @@
 *.sw[po]
 *.o
 *.so
+*.jpg
+*.png
 cabal.sandbox.config
 *.secret
 .cabal-sandbox
