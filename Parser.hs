@@ -86,5 +86,7 @@ definition = do char '$'
                     "null" -> "λp.p (λx.λy.$false)"
                     "shift" -> "λx.$pair ($second x) ($succ ($second x))"
                     "fix" -> "λf.(λx.f (x x))(λx.f(x x))"
+                    "fac" -> "λn.λf.n(λf.λn.n(f(λf.λx.n f(f x))))(λx.f)(λx.x)"
+                    "fib" -> "λn.λf.n(λc.λa.λb.c b(λx.a (b x)))(λx.λy.x)(λx.x)f"
                     "omega" -> "(λx.x x)(λy.y y)"
                     _ -> error "Not in standard Library"

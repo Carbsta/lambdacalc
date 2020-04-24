@@ -67,6 +67,9 @@ draw t = let (fig, _, _) = draw' t in fig # lwL 0.5 # frame 1
     bar =
       hbar (2 * w1) # translateY (double (-h1 - delta1)) # lineCap LineCapSquare
 
+render :: L.Lambda -> FilePath -> IO ()
+render t f = renderRasterific f (dims2D 1600 900) (draw t)
+
 -- test :: L.Lambda
 -- test = removeNames stdnc $ fst $ head $ parseTerm "($eq 1) 1"
 

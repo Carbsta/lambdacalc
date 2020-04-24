@@ -6,6 +6,7 @@ import Lambda
 import Parser
 import Conversion
 import qualified Evaluator as E
+import VisualLambda
 import Control.Monad (when, forM_, unless)
 import Control.Concurrent (threadDelay)
 import Data.Char (toLower)
@@ -13,6 +14,7 @@ import qualified Data.Map as Map
 import Data.IORef
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import qualified Data.ByteString as B
 
 import Discord
 import Discord.Types
@@ -59,12 +61,15 @@ updateMessage :: IORef (Map.Map MessageId LTerm) -> DiscordHandle -> LTerm -> In
 updateMessage idMap dis t i c m = do
     _ <- restCall dis (R.DeleteAllReactions (c, m))
     let result = E.eval t
+    render (removeNames stdnc result) tempFile
+    file <- B.readFile tempFile
     _ <- restCall dis (R.CreateMessageEmbed c "" $
         def { createEmbedTitle = "Result"
             , createEmbedFields = [EmbedField "Barendregt Naming" (T.pack $ filter (/= '"') $ show result) Nothing
                                   ,EmbedField "De Bruijn Indices" (T.pack $ show $ removeNames stdnc result) Nothing
                                   ]
             , createEmbedDescription = "click on the numbered reactions to evaluate by that many steps."
+            , createEmbedImage = Just $ CreateEmbedImageUpload file
             , createEmbedThumbnail = Just $ CreateEmbedImageUrl
                 "https://i.imgur.com/alvo0uR.png"
             })
@@ -85,12 +90,15 @@ processTerm dis [] m = do
             })
     pure ()
 processTerm dis ((t,_):_) m = do
+    render (removeNames stdnc t) tempFile
+    file <- B.readFile tempFile
     _ <- restCall dis (R.CreateMessageEmbed (messageChannel m) "" $
         def { createEmbedTitle = "Result"
             , createEmbedFields = [EmbedField "Barendregt Naming" (T.pack $ filter (/= '"') $ show t) Nothing
                                   ,EmbedField "De Bruijn Indices" (T.pack $ show $ removeNames stdnc t) Nothing
                                   ]
             , createEmbedDescription = "click on the numbered reactions to evaluate by that many steps."
+            , createEmbedImage = Just $ CreateEmbedImageUpload file
             , createEmbedThumbnail = Just $ CreateEmbedImageUrl
                     "https://i.imgur.com/alvo0uR.png"
             })
@@ -116,3 +124,6 @@ rFromBot r = botId == reactionUserId r
 
 botId :: UserId
 botId = 590901458610946071
+
+tempFile :: FilePath
+tempFile = "temp.png"
