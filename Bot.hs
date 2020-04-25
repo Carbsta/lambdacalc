@@ -37,7 +37,9 @@ eventHandler idMap dis (MessageCreate m)
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "eyes")
         let (_ , text) = T.breakOn " " (messageText m)
         let term = parseTerm $ T.unpack text
-        processTerm dis term m
+        case ("stdlib" `T.isInfixOf` text) of
+            True -> sendLib dis m
+            False -> processTerm dis term m
     | (fromBot m) && isResult m = do
         let term = fst $ head $ parseTerm $ T.unpack $ embedFieldValue $ head $ embedFields $ head (messageEmbeds m)
         atomicModifyIORef idMap (\temp -> (Map.insert (messageId m) term temp, ()))
@@ -56,6 +58,16 @@ eventHandler idMap dis (MessageReactionAdd r) = when (not $ rFromBot r) $ do
             _ -> pure ()
         Nothing -> pure()
 eventHandler _ dis _ = pure ()
+
+sendLib :: DiscordHandle -> Message -> IO ()
+sendLib dis m = do
+    _ <- restCall dis (R.CreateMessageEmbed (messageChannel m) "" $
+        def { createEmbedTitle = "Standard Library"
+            , createEmbedDescription = stdlib
+            , createEmbedThumbnail = Just $ CreateEmbedImageUrl
+                "https://i.imgur.com/alvo0uR.png"
+            })
+    pure ()
 
 updateMessage :: IORef (Map.Map MessageId LTerm) -> DiscordHandle -> LTerm -> Int -> ChannelId -> MessageId -> IO ()
 updateMessage idMap dis t i c m = do
@@ -127,3 +139,33 @@ botId = 590901458610946071
 
 tempFile :: FilePath
 tempFile = "temp.png"
+
+stdlib :: T.Text
+stdlib = "```haskell\n\
+\id -> λx.x\n\
+\succ -> λn.λs.λz.s(n s z)\n\
+\plus -> λm.λn.λf.λz.m s(n f z)\n\
+\mult -> λm.λn.λf.m (n f)\n\
+\pow -> λb.λe.e b\n\
+\pred -> λn.λf.λx.n (λg.λh.h (g f)) (λu.x) (λu.u)\n\
+\sub -> λm.λn.n $pred m\n\
+\true -> λt.λf.t\n\
+\false -> λt.λf.f\n\
+\and -> λp.λq.p q p\n\
+\or -> λp.λq.p p q\n\
+\not -> λp.p $false $true\n\
+\if -> λb.λt.λf.b t f\n\
+\iszero -> λn.n (λx.$false) $true\n\
+\leq -> λm.λn.$iszero ($sub m n)\n\
+\eq -> λm.λn.$and ($leq m n) ($leq n m)\n\
+\pair -> λf.λs.λb.b f s\n\
+\fst -> λp.p $true\n\
+\snd -> λp.p $false\n\
+\nil -> λx.$true\n\
+\null -> λp.p (λx.λy.$false)\n\
+\shift -> λx.$pair ($second x) ($succ ($second x))\n\
+\fix -> λf.(λx.f (x x))(λx.f(x x))\n\
+\fac -> λn.λf.n(λf.λn.n(f(λf.λx.n f(f x))))(λx.f)(λx.x)\n\
+\fib -> λn.λf.n(λc.λa.λb.c b(λx.a (b x)))(λx.λy.x)(λx.x)f\n\
+\omega -> (λx.x x)(λy.y y)\n\
+\```"

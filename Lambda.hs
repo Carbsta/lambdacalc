@@ -35,17 +35,6 @@ instance Show Lambda where
     showsPrec _ (App l r) = (:) '(' . shows l . (:) ')'
         .  (:) '(' . shows r . (:) ')'
 
--- maxScope :: (Num a, Ord a) => Lambda -> ScopeLevel -> a
--- maxScope (Var n) s | toInt n >= s = s
---                    | otherwise = n
--- maxScope (Abs l) s = maxScope l s
--- maxScope (App l r) s = max (maxScope l s) (maxScope r s)
-
-absSize :: Num a => Lambda -> a
-absSize (Var _) = 0
-absSize (Abs l) = 1 + absSize l
-absSize (App l r) = absSize l + absSize r
-
 scopeLevel :: (Num a, Ord a) => Lambda -> a
 scopeLevel (Var _) = 0
 scopeLevel (Abs l) = 1 + scopeLevel l
