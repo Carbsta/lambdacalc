@@ -2,6 +2,7 @@ module Lambda where
 
 import Data.List.Split (chunksOf)
 import Data.List (elemIndices, (\\))
+import Data.Number.Peano
 
 -- Named representation of lambda terms.
 -- t ::=
@@ -92,22 +93,9 @@ root of the expression (e.g the index points to a binder outside of the term)
 then that index represents a free variable within that term.
 -}
 
-data Index = S Index | Zero
+--data Nat = Z | S Nat
 
-type ScopeLevel = Int
-
-instance Show Index where
-    showsPrec _ = shows . toInt
-
--- Unary representation ensures Indexes are never negative
-toIndex :: (Num a, Ord a) => a -> Index
-toIndex 0 = Zero
-toIndex n | n < 0 = error "Can't have a negative index"
-          | otherwise = S $ toIndex (n-1)
-
-toInt :: (Num a) => Index -> a
-toInt Zero  = 0
-toInt (S i) = 1 + toInt i
+type Index = Nat
 
 data ILambda = IVar Index
              | IAbs ILambda
@@ -127,16 +115,16 @@ scopeLevel (IVar _)   = 0
 scopeLevel (IAbs l)   = 1 + scopeLevel l
 scopeLevel (IApp l r) = max (scopeLevel l) (scopeLevel r)
 
-shift :: (Num a, Ord a)=> a -> ILambda -> a -> ILambda
+shift :: Integer -> ILambda -> Integer -> ILambda
 shift d (IVar k) c
-    | toInt(k) < c = IVar k
-    | otherwise = IVar $ toIndex $ toInt(k) + d
+    | k < fromInteger c = IVar k
+    | otherwise = IVar $ k + (fromInteger d)
 shift d (IAbs l) c = IAbs $ shift d l (c+1)
 shift d (IApp l r) c = IApp (shift d l c) (shift d r c)
 
-isubst :: (Num a, Eq a, Ord a) => a -> ILambda -> ILambda -> ILambda
+isubst :: Integer -> ILambda -> ILambda -> ILambda
 isubst j s (IVar k)
-    | toInt(k) == j = s
+    | k == fromInteger j = s
     | otherwise = IVar k
 isubst j s (IAbs l) = IAbs $ isubst (j+1) (shift 1 s 0) l
 isubst j s (IApp l r) = IApp (isubst j s l) (isubst j s r)
@@ -170,6 +158,6 @@ stdnc :: NamingContext
 stdnc = chunksOf 1 ['a'..]
 
 removeNames :: NamingContext -> Lambda -> ILambda
-removeNames g (Var x) = IVar $ toIndex $ head (elemIndices x g)
+removeNames g (Var x) = IVar $ fromInteger $ toInteger $ head (elemIndices x g)
 removeNames g (Abs x t) = IAbs $ removeNames (x:g) t
 removeNames g (App t1 t2) = IApp (removeNames g t1) (removeNames g t2)

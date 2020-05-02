@@ -20,7 +20,7 @@ executable lambdacalc
   other-modules:       Lambda, ParserMonad, Parser, VisualLambda, Bot
   -- other-extensions:
   build-depends:       base, text, split, discord-haskell, containers, diagrams-lib,
-                       diagrams-rasterific, bytestring
+                       diagrams-rasterific, bytestring, number
   ghc-options:         -threaded
   -- hs-source-dirs:
   default-language:    Haskell2010

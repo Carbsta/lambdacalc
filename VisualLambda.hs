@@ -7,6 +7,7 @@ module VisualLambda where
 import qualified Lambda as L
 import Diagrams.Prelude
 import Diagrams.Backend.Rasterific
+import Data.Number.Peano
 
 -- This code is a re-implementation of Paul Brauners's implementation
 -- of John Tromp's lambda diagrams: https://github.com/polux/lambda-diagrams
@@ -16,17 +17,18 @@ import Diagrams.Backend.Rasterific
 -- modification is permitted under the Apache 2.0 license
 -- http://www.apache.org/licenses/LICENSE-2.0
 
-type Width = Int
-type Height = Int
+type Width = Integer
+type Height = Integer
+type ScopeLevel = Integer
 
 draw :: L.ILambda -> Diagram B
 draw t = fig # lwL 0.5 # frame 1
     where binders = L.scopeLevel t
           (fig, _, _) = figure binders t
 
-figure :: L.ScopeLevel -> L.ILambda -> (Diagram B, Width, Height)
+figure :: ScopeLevel -> L.ILambda -> (Diagram B, Width, Height)
 figure s (L.IVar x) = (fig, 1, 0)
-    where minreach = min s (L.toInt x)
+    where minreach = min s (fromPeano x)
           reach = 1 + fromIntegral minreach
           fig = (phantom (hrule 2 :: Diagram B)) <> vrule reach # alignB
 figure s (L.IAbs t) = ((bar <> fig # translateY (-1)), w, h+1)
