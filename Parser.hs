@@ -1,12 +1,12 @@
 module Parser where
 
-import           AST
+import           Lambda
 import           Data.Char
 import           ParserMonad
 import Control.Applicative
 
 
-parseFile :: FilePath -> IO [(String,LTerm)]
+parseFile :: FilePath -> IO [(String,Lambda)]
 parseFile fp = fst <$> head <$>
                 apply (comments *> parseLine `sepby` eol <* eol) <$> readFile fp
 
@@ -16,7 +16,7 @@ comments = do symb "--"
               symb "--"
               return ()
 
-parseLine :: Parser (String,LTerm)
+parseLine :: Parser (String,Lambda)
 parseLine = do name <- ltoken $ many1 letter
                lsymb "="
                term <- lterm
@@ -25,41 +25,41 @@ parseLine = do name <- ltoken $ many1 letter
 eol :: Parser Char
 eol = char '\n' +++ char '\r'
 
-parseTerm :: String -> [(LTerm,String)]
+parseTerm :: String -> [(Lambda,String)]
 parseTerm s = apply lterm s
 
-lterm :: Parser LTerm
+lterm :: Parser Lambda
 lterm = labs +++ lapp +++ unit
 
-labs :: Parser LTerm
+labs :: Parser Lambda
 labs = do absOp
           v <- ltoken letter
           lsymb "."
           t <- lterm
-          return (LAbs [v] t)
+          return (Abs [v] t)
 
 absOp :: Parser String
 absOp = lsymb "λ" +++ lsymb "\\"
 
-lapp :: Parser LTerm
-lapp = do {ts <- many1 unit; return (foldl1 LApp ts)}
+lapp :: Parser Lambda
+lapp = do {ts <- many1 unit; return (foldl1 App ts)}
 
-unit :: Parser LTerm
+unit :: Parser Lambda
 unit = lvar +++ paren +++ number +++ definition
 
-lvar :: Parser LTerm
-lvar = do {v <- ltoken letter; return (LVar [v])}
+lvar :: Parser Lambda
+lvar = do {v <- ltoken letter; return (Var [v])}
 
-paren :: Parser LTerm
+paren :: Parser Lambda
 paren = do {lsymb "("; term <- lterm; lsymb ")"; return term}
 
-number :: Parser LTerm
-number = do {n <- ltoken $ many1 digit; return $ LAbs "n" (LAbs "m" (times $ read n))}
-        where times 0 = LVar "m"
-              times m = LApp (LVar "n") (times $ m-1)
+number :: Parser Lambda
+number = do {n <- ltoken $ many1 digit; return $ Abs "n" (Abs "m" (times $ read n))}
+        where times 0 = Var "m"
+              times m = App (Var "n") (times $ m-1)
 
 
-definition :: Parser LTerm
+definition :: Parser Lambda
 definition = do char '$'
                 name <- ltoken $ many1 letter
                 return $ fst $ head $ parseTerm $ case name of

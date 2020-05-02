@@ -1,11 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}  -- allows "string literals" to be Text
 module Bot where
 
-import AST
-import Lambda
 import Parser
-import Conversion
-import qualified Evaluator as E
+import Lambda
 import VisualLambda
 import Control.Monad (when, forM_, unless)
 import Control.Concurrent (threadDelay)
@@ -31,7 +28,7 @@ runBot = do
     threadDelay (1 `div` 10 * 10^6)
     TIO.putStrLn t
 
-eventHandler :: IORef (Map.Map MessageId LTerm) -> DiscordHandle -> Event -> IO ()
+eventHandler :: IORef (Map.Map MessageId Lambda) -> DiscordHandle -> Event -> IO ()
 eventHandler idMap dis (MessageCreate m)
     | (not (fromAnyBot m) && atBot m) = do
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "eyes")
@@ -69,10 +66,10 @@ sendLib dis m = do
             })
     pure ()
 
-updateMessage :: IORef (Map.Map MessageId LTerm) -> DiscordHandle -> LTerm -> Int -> ChannelId -> MessageId -> IO ()
+updateMessage :: IORef (Map.Map MessageId Lambda) -> DiscordHandle -> Lambda -> Int -> ChannelId -> MessageId -> IO ()
 updateMessage idMap dis t i c m = do
     _ <- restCall dis (R.DeleteAllReactions (c, m))
-    let result = E.eval t
+    let result = eval t
     render (removeNames stdnc result) tempFile
     file <- B.readFile tempFile
     _ <- restCall dis (R.CreateMessageEmbed c "" $
@@ -92,7 +89,7 @@ updateMessage idMap dis t i c m = do
     pure ()
 
 
-processTerm :: DiscordHandle -> [(LTerm,String)] -> Message -> IO ()
+processTerm :: DiscordHandle -> [(Lambda,String)] -> Message -> IO ()
 processTerm dis [] m = do
     _ <- restCall dis (R.CreateMessageEmbed (messageChannel m) "" $
         def { createEmbedTitle = "Parse Error"

@@ -4,9 +4,6 @@ import           Control.Applicative
 import           Control.Monad
 import           Data.Char
 
--- Unused: using Parsec instead.
--- However remains a good exercise in understanding parsing.
-
 -- Parser built following the paper Monadic Parsing in Haskell
 -- Graham Hutton & Erik Meijer
 -- http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf

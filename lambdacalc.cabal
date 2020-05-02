@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                lambdacalc
-version:             0.1.0.0
+version:             0.1.1.0
 -- synopsis:
 -- description:
 -- license:
@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable lambdacalc
   main-is:             Main.hs
-  other-modules:       Parser, AST, Evaluator, Conversion, Lambda, ParserMonad, VisualLambda, Bot
+  other-modules:       Lambda, ParserMonad, Parser, VisualLambda, Bot
   -- other-extensions:
   build-depends:       base, text, split, discord-haskell, containers, diagrams-lib,
                        diagrams-rasterific, bytestring

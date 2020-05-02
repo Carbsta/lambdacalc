@@ -19,20 +19,20 @@ import Diagrams.Backend.Rasterific
 type Width = Int
 type Height = Int
 
-draw :: L.Lambda -> Diagram B
+draw :: L.ILambda -> Diagram B
 draw t = fig # lwL 0.5 # frame 1
     where binders = L.scopeLevel t
           (fig, _, _) = figure binders t
 
-figure :: L.ScopeLevel -> L.Lambda -> (Diagram B, Width, Height)
-figure s (L.Var x) = (fig, 1, 0)
+figure :: L.ScopeLevel -> L.ILambda -> (Diagram B, Width, Height)
+figure s (L.IVar x) = (fig, 1, 0)
     where minreach = min s (L.toInt x)
           reach = 1 + fromIntegral minreach
           fig = (phantom (hrule 2 :: Diagram B)) <> vrule reach # alignB
-figure s (L.Abs t) = ((bar <> fig # translateY (-1)), w, h+1)
+figure s (L.IAbs t) = ((bar <> fig # translateY (-1)), w, h+1)
     where (fig, w, h) = figure s t
           bar = hrule (fromIntegral (2 * w) - 0.5) # alignL # translateX (-0.75)
-figure s (L.App t1 t2) =
+figure s (L.IApp t1 t2) =
     (((left <> taill) ||| (right <> tailr)) <> bar, wl + wr, hl + delta1 + 1)
    where
     (left, wl, hl) = figure s t1
@@ -44,10 +44,10 @@ figure s (L.App t1 t2) =
     bar =
       hrule (fromIntegral $ (2 * wl)) # alignL # translateY (fromIntegral (-hl - delta1)) # lineCap LineCapSquare
 
-render :: L.Lambda -> FilePath -> IO ()
+render :: L.ILambda -> FilePath -> IO ()
 render t f = renderRasterific f (dims2D 1600 900) (draw t)
 
--- test :: L.Lambda
+-- test :: L.ILambda
 -- test = removeNames stdnc $ fst $ head $ parseTerm "($eq 1) 1"
 
 -- main = renderRasterific "test.png" (dims2D 1600 900) (draw test)
