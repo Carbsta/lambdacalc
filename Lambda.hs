@@ -13,7 +13,6 @@ import Data.List (elemIndices, (\\))
 data Lambda = Var Name
             | Abs Name Lambda
             | App Lambda Lambda
-           deriving (Ord, Eq)
 
 type Name = String
 
