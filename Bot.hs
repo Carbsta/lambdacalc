@@ -7,6 +7,7 @@ import qualified Data.ByteString    as B
 import           Data.Char          (toLower)
 import           Data.IORef
 import qualified Data.Map           as Map
+import           Data.Maybe         (isNothing)
 import qualified Data.Text          as T
 import qualified Data.Text.IO       as TIO
 import           Lambda
@@ -28,30 +29,26 @@ runBot = do
     threadDelay (1 `div` 10 * 10^6)
     TIO.putStrLn t
 
-eventHandler :: IORef (Map.Map MessageId Lambda) -> DiscordHandle -> Event -> IO ()
+eventHandler :: IORef (Map.Map UserId Lambda) -> DiscordHandle -> Event -> IO ()
 eventHandler idMap dis (MessageCreate m)
-    | (not (fromAnyBot m) && atBot m) = do
+    | not (fromAnyBot m) && atBot m = do
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "eyes")
         let (_ , text) = T.breakOn " " (messageText m)
         let term = parseTerm $ T.unpack text
-        case ("stdlib" `T.isInfixOf` text) of
-            True  -> sendLib dis m
-            False -> processTerm dis term m
-    | (fromBot m) && isResult m = do
-        let term = fst $ head $ parseTerm $ T.unpack $ embedFieldValue $ head $ embedFields $ head (messageEmbeds m)
-        atomicModifyIORef idMap (\temp -> (Map.insert (messageId m) term temp, ()))
+        if "stdlib" `T.isInfixOf` text then sendLib dis m else processTerm idMap dis term m
+    | fromBot m && isResult m = do
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "one")
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "keycap_ten")
         _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "100")
         pure ()
     | otherwise = pure ()
-eventHandler idMap dis (MessageReactionAdd r) = when (not $ rFromBot r) $ do
+eventHandler idMap dis (MessageReactionAdd r) = unless (rFromBot r) $ do
     temp <- readIORef idMap
-    case (Map.lookup (reactionMessageId r) temp) of
-        Just term -> case (emojiName $ reactionEmoji r) of
-            "1️⃣" -> updateMessage idMap dis term 1 (reactionChannelId r) (reactionMessageId r)
-            "🔟" -> updateMessage idMap dis term 10 (reactionChannelId r) (reactionMessageId r)
-            "💯" -> updateMessage idMap dis term 100 (reactionChannelId r) (reactionMessageId r)
+    case Map.lookup (reactionUserId r) temp of
+        Just term -> case emojiName $ reactionEmoji r of
+            "1️⃣" -> updateMessage idMap dis term 1 (reactionChannelId r) (reactionMessageId r) (reactionUserId r)
+            "🔟" -> updateMessage idMap dis term 10 (reactionChannelId r) (reactionMessageId r) (reactionUserId r)
+            "💯" -> updateMessage idMap dis term 100 (reactionChannelId r) (reactionMessageId r) (reactionUserId r)
             _ -> pure ()
         Nothing -> pure()
 eventHandler _ dis _ = pure ()
@@ -66,9 +63,9 @@ sendLib dis m = do
             })
     pure ()
 
-updateMessage :: IORef (Map.Map MessageId Lambda) -> DiscordHandle -> Lambda -> Int -> ChannelId -> MessageId -> IO ()
-updateMessage idMap dis t i c m = do
-    _ <- restCall dis (R.DeleteAllReactions (c, m))
+updateMessage :: IORef (Map.Map UserId Lambda) -> DiscordHandle -> Lambda -> Int -> ChannelId -> MessageId -> UserId -> IO ()
+updateMessage idMap dis t i c m u = do
+    _ <- restCall dis (R.DeleteMessage (c, m))
     let result = eval i t
     render (removeNames stdnc result) tempFile
     file <- B.readFile tempFile
@@ -82,15 +79,12 @@ updateMessage idMap dis t i c m = do
             , createEmbedThumbnail = Just $ CreateEmbedImageUrl
                 "https://i.imgur.com/alvo0uR.png"
             })
-    atomicModifyIORef idMap (\temp -> (Map.insert m result temp, ()))
-    _ <- restCall dis (R.CreateReaction (c, m) "one")
-    _ <- restCall dis (R.CreateReaction (c, m) "keycap_ten")
-    _ <- restCall dis (R.CreateReaction (c, m) "100")
+    atomicModifyIORef idMap (\temp -> (Map.insert u result temp, ()))
     pure ()
 
 
-processTerm :: DiscordHandle -> [(Lambda,String)] -> Message -> IO ()
-processTerm dis [] m = do
+processTerm :: IORef (Map.Map UserId Lambda) -> DiscordHandle -> [(Lambda,String)] -> Message -> IO ()
+processTerm _ dis [] m = do
     _ <- restCall dis (R.CreateMessageEmbed (messageChannel m) "" $
         def { createEmbedTitle = "Parse Error"
             , createEmbedDescription = "Term failed to parse."
@@ -98,7 +92,8 @@ processTerm dis [] m = do
                     "https://i.imgur.com/alvo0uR.png"
             })
     pure ()
-processTerm dis ((t,_):_) m = do
+processTerm idMap dis ((t,_):_) m = do
+    atomicModifyIORef idMap (\temp -> (Map.insert (userId $ messageAuthor m) t temp, ()))
     render (removeNames stdnc t) tempFile
     file <- B.readFile tempFile
     _ <- restCall dis (R.CreateMessageEmbed (messageChannel m) "" $
@@ -117,8 +112,8 @@ fromAnyBot :: Message -> Bool
 fromAnyBot m = userIsBot (messageAuthor m)
 
 isResult :: Message -> Bool
-isResult m | messageEmbeds m == [] = False
-           | embedTitle (head (messageEmbeds m)) == Nothing = False
+isResult m | null $ messageEmbeds m = False
+           | isNothing (embedTitle (head (messageEmbeds m))) = False
            | embedTitle (head (messageEmbeds m)) == Just "Result" = True
            | otherwise = False
 
