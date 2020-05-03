@@ -1,21 +1,21 @@
-{-# LANGUAGE OverloadedStrings #-}  -- allows "string literals" to be Text
+{-# LANGUAGE OverloadedStrings #-}
 module Bot where
 
-import Parser
-import Lambda
-import VisualLambda
-import Control.Monad (when, forM_, unless)
-import Control.Concurrent (threadDelay)
-import Data.Char (toLower)
-import qualified Data.Map as Map
-import Data.IORef
-import qualified Data.Text as T
-import qualified Data.Text.IO as TIO
-import qualified Data.ByteString as B
+import           Control.Concurrent (threadDelay)
+import           Control.Monad      (forM_, unless, when)
+import qualified Data.ByteString    as B
+import           Data.Char          (toLower)
+import           Data.IORef
+import qualified Data.Map           as Map
+import qualified Data.Text          as T
+import qualified Data.Text.IO       as TIO
+import           Lambda
+import           Parser
+import           VisualLambda
 
-import Discord
-import Discord.Types
-import qualified Discord.Requests as R
+import           Discord
+import qualified Discord.Requests   as R
+import           Discord.Types
 
 runBot :: IO ()
 runBot = do
@@ -35,7 +35,7 @@ eventHandler idMap dis (MessageCreate m)
         let (_ , text) = T.breakOn " " (messageText m)
         let term = parseTerm $ T.unpack text
         case ("stdlib" `T.isInfixOf` text) of
-            True -> sendLib dis m
+            True  -> sendLib dis m
             False -> processTerm dis term m
     | (fromBot m) && isResult m = do
         let term = fst $ head $ parseTerm $ T.unpack $ embedFieldValue $ head $ embedFields $ head (messageEmbeds m)

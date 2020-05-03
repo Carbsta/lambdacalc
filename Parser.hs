@@ -1,9 +1,9 @@
 module Parser where
 
-import           Lambda
+import           Control.Applicative
 import           Data.Char
+import           Lambda
 import           ParserMonad
-import Control.Applicative
 
 
 parseFile :: FilePath -> IO [(String,Lambda)]

@@ -1,13 +1,13 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeFamilies              #-}
 
 module VisualLambda where
 
-import qualified Lambda as L
-import Diagrams.Prelude
-import Diagrams.Backend.Rasterific
-import Data.Number.Peano
+import           Data.Number.Peano
+import           Diagrams.Backend.Rasterific
+import           Diagrams.Prelude
+import qualified Lambda                      as L
 
 -- This code is a re-implementation of Paul Brauners's implementation
 -- of John Tromp's lambda diagrams: https://github.com/polux/lambda-diagrams
