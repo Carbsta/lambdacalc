@@ -136,7 +136,7 @@ data ILambda = IVar Index
 
 -- Pretty printing
 instance Show ILambda where
-    showsPrec _ (IVar n) = shows n
+    showsPrec _ (IVar n) = shows $ toInteger n
     showsPrec _ (IAbs l) = (:) 'λ' . shows l
     showsPrec _ (IApp l r) = (:) '(' . shows l . (:) ')'
         .  (:) '(' . shows r . (:) ')'
