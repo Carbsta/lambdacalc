@@ -153,6 +153,10 @@ scopeLevel (IVar _)   = 0
 scopeLevel (IAbs l)   = 1 + scopeLevel l
 scopeLevel (IApp l r) = max (scopeLevel l) (scopeLevel r)
 
+------------------------------------------------------------------
+-- Evaluation of Nameless Terms, unused
+-- See TAPL 6.2 for the definitions of shifting and substitution used here.
+
 shift :: Integer -> ILambda -> Integer -> ILambda
 shift d (IVar k) c
     | k < fromInteger c = IVar k
@@ -167,7 +171,7 @@ isubst j s (IVar k)
 isubst j s (IAbs l) = IAbs $ isubst (j+1) (shift 1 s 0) l
 isubst j s (IApp l r) = IApp (isubst j s l) (isubst j s r)
 
--- Evaluation:
+-- Evaluation - Call by Value:
 --   t1 -> t1' / t1 t2 -> t1' t2 (E-App1)
 --   t2 -> t2' / v1 t2 -> v1 t2' (E-App2)
 -- (\x.t12) v2 -> ^-1[0 => ^1(v2)]t12 (E-AppAbs) - beta reduction

@@ -41,30 +41,13 @@ item =  Parser (\cs -> case cs of
                       (c:cs) -> [(c,cs)])
 
 -- updated from MonadZero and MonadPlus
--- to Alternative and MonadPlus
-
-instance MonadPlus Parser where
-        mzero = empty
-        mplus = (<|>)
+-- to Alternative
 
 instance Alternative Parser where
         empty   = Parser (\cs -> [])
         p <|> q = Parser (\cs -> parse p cs <|> parse q cs)
         some p = do {a <- p; as <- many p; return (a:as)}
         many p  = some p +++ return []
-
--- (mplus) is an operator for non-deterministic choice
--- general mzero (mplus) laws:
---         mzero `mplus` p = p
---         p `mplus` mzero = p
--- p `mplus` (q `mplus` r) = (p `mplus` q) `mplus` r
-
--- parser zero `mplus` laws:
---                   mzero >>= f = mzero
---             p >>= const mzero = mzero
---           (p `mplus` q) >>= f = (p >>= f) `mplus` (q >>= f)
--- p >>= (\a -> f a `mplus` g a) = (p >>= f) `mplus` (p >>= g)
--- (ignoring the order of results returned for the last law)
 
 -- deterministic choice operator that returns at most one result
 (+++) :: Parser a -> Parser a -> Parser a
@@ -78,7 +61,7 @@ p +++ q = Parser (\cs -> case parse (p <|> q) cs of
 -- sat takes a predicate and returns a parser that consumes a
 -- single character if it satisfies the predicate
 sat :: (Char -> Bool) -> Parser Char
-sat p = do {c <- item; if p c then return c else mzero}
+sat p = do {c <- item; if p c then return c else empty}
 
 -- e.g parser for specific characters:
 char :: Char -> Parser Char
