@@ -31,6 +31,7 @@ Test-Suite spec
     Hs-Source-Dirs:       tests
     Ghc-Options:          -Wall
     Main-Is:              Spec.hs
+    build-tool-depends:   hspec-discover:hspec-discover
     Build-Depends:        base
                         , hspec
                         , QuickCheck
