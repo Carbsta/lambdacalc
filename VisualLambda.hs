@@ -28,7 +28,7 @@ draw t = fig # lwL 0.5 # frame 1
 
 figure :: ScopeLevel -> L.ILambda -> (Diagram B, Width, Height)
 figure s (L.IVar x) = (fig, 1, 0)
-    where minreach = min s (fromPeano x)
+    where minreach = if L.isFree s x then s else fromPeano x
           reach = 1 + fromIntegral minreach
           fig = (phantom (hrule 2 :: Diagram B)) <> vrule reach # alignB
 figure s (L.IAbs t) = ((bar <> fig # translateY (-1)), w, h+1)

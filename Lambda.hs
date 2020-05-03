@@ -153,6 +153,9 @@ scopeLevel (IVar _)   = 0
 scopeLevel (IAbs l)   = 1 + scopeLevel l
 scopeLevel (IApp l r) = max (scopeLevel l) (scopeLevel r)
 
+isFree :: Integer -> Index -> Bool
+isFree s i = s - (fromPeano i) <= 0
+
 ------------------------------------------------------------------
 -- Evaluation of Nameless Terms, unused
 -- See TAPL 6.2 for the definitions of shifting and substitution used here.
