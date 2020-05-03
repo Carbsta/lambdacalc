@@ -69,7 +69,7 @@ sendLib dis m = do
 updateMessage :: IORef (Map.Map MessageId Lambda) -> DiscordHandle -> Lambda -> Int -> ChannelId -> MessageId -> IO ()
 updateMessage idMap dis t i c m = do
     _ <- restCall dis (R.DeleteAllReactions (c, m))
-    let result = eval t
+    let result = eval i t
     render (removeNames stdnc result) tempFile
     file <- B.readFile tempFile
     _ <- restCall dis (R.CreateMessageEmbed c "" $

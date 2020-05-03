@@ -1,8 +1,8 @@
 module Lambda where
 
-import Data.List.Split (chunksOf)
-import Data.List (elemIndices, (\\))
-import Data.Number.Peano
+import           Data.List         (elemIndices, (\\))
+import           Data.List.Split   (chunksOf)
+import           Data.Number.Peano
 
 -- Named representation of lambda terms.
 -- t ::=
@@ -14,6 +14,7 @@ import Data.Number.Peano
 data Lambda = Var Name
             | Abs Name Lambda
             | App Lambda Lambda
+            deriving Eq
 
 type Name = String
 
@@ -68,21 +69,53 @@ fresh ns = (maximum ns)++"'"
 --   t1 -> t1' / t1 t2 -> t1' t2 (E-App1)
 --   t2 -> t2' / v1 t2 -> v1 t2' (E-App2)
 -- (\x.t12) v2 / [x => v2]t12    (E-AppAbs)
-evalStep :: Lambda -> Either Lambda Lambda
-evalStep (App (Abs x t) v2@(Abs _ _)) = Right $ subst x v2 t
-evalStep (App v1@(Abs _ _) t2)         = case evalStep t2 of
-                                              Right t2' -> Right $ App v1 t2'
-                                              Left  t2' -> Left t2'
-evalStep (App t1 t2)                    = case evalStep t1 of
-                                              Right t1' -> Right $ App t1' t2
-                                              Left  t1' -> Left t1'
-evalStep x                               = Left x
+-- evalStep :: Lambda -> Either Lambda Lambda
+-- evalStep (App (Abs x t) v2@(Abs _ _)) = Right $ subst x v2 t
+-- evalStep (App v1@(Abs _ _) t2)         = case evalStep t2 of
+--                                               Right t2' -> Right $ App v1 t2'
+--                                               Left  t2' -> Left t2'
+-- evalStep (App t1 t2)                    = case evalStep t1 of
+--                                               Right t1' -> Right $ App t1' t2
+--                                               Left  t1' -> Left t1'
+-- evalStep x                               = Left x
+--
+-- eval :: Lambda -> Lambda
+-- eval t = case evalStep t of
+--             Left  x -> x
+--             Right x -> eval x
 
-eval :: Lambda -> Lambda
-eval t = case evalStep t of
-            Left  x -> x
-            Right x -> eval x
+------------------------------------------------------------------
+-- Normal Order Strategy
 
+nf :: Lambda -> Bool
+nf (Abs _ t) = nf t
+nf t | nanf t = True
+     | otherwise = False
+
+nanf :: Lambda -> Bool
+nanf (Var _)     = True
+nanf (App t1 t2) = nanf t1 && nf t2
+nanf t           = False
+
+na :: Lambda -> Bool
+na (Var _)   = True
+na (App _ _) = True
+na t         = False
+
+evalPred :: Lambda -> Bool
+evalPred t = not (t == t')
+            where t' = nor t
+
+nor :: Lambda -> Lambda
+nor (App t1 t2) | na t1 && evalPred t1 = App (nor t1) t2
+                | nanf t1 && evalPred t2 = App t1 (nor t2)
+nor (App (Abs x t) t2) = subst x t2 t
+nor (Abs x t)   | evalPred t = Abs x (nor t)
+nor t = t
+
+eval :: Int -> Lambda -> Lambda
+eval n t | n <= 0 = t
+         | otherwise = eval (n-1) (nor t)
 -------------------------------------------------------------------------------
 {-|
 de Bruijn notation of lambda terms, with incidices in a unary representation as
