@@ -102,20 +102,25 @@ na (Var _)   = True
 na (App _ _) = True
 na t         = False
 
-evalPred :: Lambda -> Bool
-evalPred t = not (t == t')
+evalPred :: Lambda -> (Bool, Lambda)
+evalPred t = (not (t == t'), t')
             where t' = nor t
 
 nor :: Lambda -> Lambda
-nor (App t1 t2) | na t1 && evalPred t1 = App (nor t1) t2
-                | nanf t1 && evalPred t2 = App t1 (nor t2)
+nor (App t1 t2) | na t1 && t1Pred = App t1' t2
+                | nanf t1 && t2Pred = App t1 t2'
+                where (t1Pred, t1') = evalPred t1
+                      (t2Pred, t2') = evalPred t2
 nor (App (Abs x t) t2) = subst x t2 t
-nor (Abs x t)   | evalPred t = Abs x (nor t)
+nor (Abs x t)   | tPred = Abs x t'
+                where (tPred, t') = evalPred t
 nor t = t
 
 eval :: Int -> Lambda -> Lambda
 eval n t | n <= 0 = t
-         | otherwise = eval (n-1) (nor t)
+         | not tPred = t
+         | otherwise = eval (n-1) t'
+         where (tPred, t') = evalPred t
 -------------------------------------------------------------------------------
 {-|
 de Bruijn notation of lambda terms, with incidices in a unary representation as
