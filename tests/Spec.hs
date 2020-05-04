@@ -1,15 +1,16 @@
 {-# OPTIONS_GHC -F -pgmF hspec-discover #-}
 
-module GettingStartedSpec (spec) where
+module TestingSpec (spec) where
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
+import qualified ParserMonad as PM
 
 spec :: Spec
 spec = do
-    describe "icebreaker" $ do
-        prop "icebreaker" $ \x y ->
-            add x y == add y x
+    describe "testing" $ do
+        prop "testing" $ \x y ->
+            add x y == add 0 1
 
 add :: Int -> Int -> Int
 add x y = x + y
